@@ -36,18 +36,14 @@ const createMedicine = async (req: Request, res: Response) => {
 
 const readMedicine = async (req: Request, res: Response) => {
     try {
-        //  get all medicine
-        // const id: number = parseInt(req.params.id)
-        // const medicine = await prisma.medicine.findUnique({
-        //     where: { id }
-        // })
-        // if (!medicine) {
-        //     return res.status(404).json({
-        //         message: "Medicine not found"
-        //     })
-        // }
-        // return res.status(200).json(medicine)
-        const allmedicine = await prisma.medicine.findMany()
+        // get all medicine 
+        const search = req.query.search
+        const allmedicine = await prisma.medicine.findMany({ where: {
+            OR: [{
+                name: { contains: search?.toString()  ||  " " }
+                }]
+            } 
+        })
         res.status(200).json({
             message: "medicine has been retrived",
             data: allmedicine
@@ -57,4 +53,66 @@ const readMedicine = async (req: Request, res: Response) => {
     }
 }
 
-export { createMedicine, readMedicine }
+const updateMedicine = async (req: Request, res: Response) => {
+    try {
+        // read "id" of medicine that sent at params(parameter url)
+        const id = req.params.id
+        
+        // check existing medicine based on id
+        const findMedicine = await prisma.medicine.findFirst({where: {id: Number(id)}})
+        
+        if(!findMedicine){
+            return res.status(404).json({
+                message: "Medicine not found"
+            })
+        }
+
+        // read property of medicine from req.body
+        const {name, stock, price, type, exp_date} = req.body
+
+        // update medicine
+        const saveMedicine = await prisma.medicine.update({
+            where: {id: Number(id)},
+            data: {
+                    name: name ?? findMedicine.name,
+                    stock: stock ?? findMedicine.stock,
+                    price: price ?? findMedicine.price, 
+                    type: type ?? findMedicine.type, 
+                    exp_date: exp_date ?? findMedicine.exp_date
+                }
+        })
+
+        return res.status(200).json({
+            message: "Medicine has been updated",
+            data: saveMedicine
+        })
+    } catch (error) {
+        return res.status(500).json(error)
+    }
+}
+
+const deleteMedicine = async(req: Request, res: Response) => {
+    try {
+        const id = req.params.id
+
+        // check obat
+        const findMedicine = await prisma.medicine.findFirst({where: {id: Number(id)}})
+        if(!findMedicine) {
+            return res.status(404).json({
+                message: "Medicine not found"
+            })
+        }
+        
+        // delete medicine
+        const saveMedicine = await prisma.medicine.delete({where: {id: Number(id)}})
+
+        return res.status(200).json({
+            message: "medicine has ben removed",
+            data: saveMedicine
+        })
+    } catch (error) {
+        return res.status(500).json(error)
+    }
+}
+
+export { createMedicine, readMedicine, updateMedicine, deleteMedicine }
