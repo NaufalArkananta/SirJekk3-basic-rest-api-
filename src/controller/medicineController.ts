@@ -10,27 +10,31 @@ type DrugType =
 const createMedicine = async (req: Request, res: Response) => {
     try {
         const name: string = req.body.name
-        const stock: number = req.body.stock
+        const stock: number = Number(req.body.stock)
         const exp_date: Date = new Date(req.body.exp_date)
-        const price: number = req.body.price
+        const price: number = Number(req.body.price)
         const type: DrugType = req.body.type
-
-        // save a new medicine to DB
+        const photo: string = req.file?.filename || ``
+    
+    /** save a new medicine to DB  */
         const newMedicine = await prisma.medicine.create({
             data: {
                 name,
                 stock,
                 exp_date,
                 price,
-                type
+                type,
+                photo
             }
         })
-        return res.status(200).json({
-            message: "New medicine has been created",
-            data:newMedicine
+        return res.status(200)
+            .json({
+                message: `New Medicine has been created`,
+                data: newMedicine
         })
-    } catch (error) {
-        return res.status(500).json(error)
+} catch (error) {
+    return res.status(500)
+        .json(error);
     }
 }
 

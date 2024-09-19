@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import Joi from "joi";
+import  path  from "path"
+import { ROOT_DIRECTORY } from "../config"
+import fs from "fs" 
 
 // create a rule/schema for adding new medicine
 const createSchema = Joi.object({
@@ -13,6 +16,14 @@ const createSchema = Joi.object({
 const createValidation = (req: Request, res: Response, next: NextFunction) => {
     const validate = createSchema.validate(req.body, { abortEarly: false }); // To get all errors
     if (validate.error) {
+        let fileName: string = req.file?.filename || ``
+        let pathFile = path.join(ROOT_DIRECTORY,"public", "medicine-photo", fileName)
+        /** check file is exists*/
+        let fileExists = fs.existsSync(pathFile)
+        // apakah ada file yg dihapus
+        if(fileExists && fileName !==``) {
+            fs.unlinkSync(pathFile)
+        }
         return res.status(400).json({
             message: validate.error.details.map(it => it.message).join(", "), // Error messages separated by comma
         });
@@ -32,6 +43,14 @@ const updateSchema = Joi.object({
 const updateValidation = (req: Request, res: Response, next: NextFunction) => {
     const validate = updateSchema.validate(req.body, { abortEarly: false }); // To get all errors
     if (validate.error) {
+        let fileName: string = req.file?.filename || ``
+        let pathFile = path.join(ROOT_DIRECTORY,"public", "medicine-photo", fileName)
+        /** check file is exists*/
+        let fileExists = fs.existsSync(pathFile)
+        // apakah ada file yg dihapus
+        if(fileExists && fileName !==``) {
+            fs.unlinkSync(pathFile)
+        }
         return res.status(400).json({
             message: validate.error.details.map(it => it.message).join(", "), // Error messages separated by comma
         });
