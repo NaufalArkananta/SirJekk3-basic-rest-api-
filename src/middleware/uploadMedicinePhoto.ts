@@ -22,8 +22,24 @@ const storage = multer.diskStorage({
     }
 })
 
+// define funtion to filtering file
+const filterFile = (req: Request, file: Express.Multer.File, callback: multer.FileFilterCallback) => {
+    // ddefine allowed extension
+    const allowedFile = /png|jpg|jpeg|gif/
+    // check file extension of uploud
+    const isAllow = allowedFile.test(file.mimetype)
+
+    if(isAllow){
+        callback(null, true)
+    }else {
+        callback(new Error(`your file is not allow to uploud`))
+    }
+}
+
 const uploadMedicinePhoto = multer({
-    storage 
+    storage, 
+    fileFilter: filterFile,
+    limits: {fileSize: 2 * 1024 * 1024}
 })
 
 export{uploadMedicinePhoto}

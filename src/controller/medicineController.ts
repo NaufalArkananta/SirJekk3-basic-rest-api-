@@ -1,5 +1,8 @@
-import { Request, Response } from "express";
+import { Request, Response } from "express"
 import { PrismaClient } from "@prisma/client"
+import path from "path"
+import fs from "fs"
+import { ROOT_DIRECTORY } from "../config"
 
 // create objek of prisma
 const prisma = new PrismaClient({errorFormat: "minimal"})
@@ -71,6 +74,22 @@ const updateMedicine = async (req: Request, res: Response) => {
             })
         }
 
+        // check change file or not
+        if(req.file){
+            // assume that user want to replace photo
+            // define the old file name
+            let oldFileName = findMedicine.photo
+            // define path / location of old file
+            let pathFile = `${ROOT_DIRECTORY}/public/medicine-photo/${oldFileName}`
+            // check is fie exists
+            let existsFile = fs.existsSync(pathFile)
+
+            if(existsFile && oldFileName !==``) {
+                // delete the old file
+                fs.unlinkSync(pathFile)
+            }
+        }
+
         // read property of medicine from req.body
         const {name, stock, price, type, exp_date} = req.body
 
@@ -82,7 +101,8 @@ const updateMedicine = async (req: Request, res: Response) => {
                     stock: stock ?? findMedicine.stock,
                     price: price ?? findMedicine.price, 
                     type: type ?? findMedicine.type, 
-                    exp_date: exp_date ?? findMedicine.exp_date
+                    exp_date: exp_date ?? findMedicine.exp_date,
+                    photo: req.file ? req.file.filename : findMedicine.photo
                 }
         })
 
@@ -107,6 +127,15 @@ const deleteMedicine = async(req: Request, res: Response) => {
             })
         }
         
+        // delete the file
+        let oldFileName = findMedicine.photo
+        let pathFile = `${ROOT_DIRECTORY}/public/medicine-photo/${oldFileName}`
+        let existsFile = fs.existsSync(pathFile)
+
+        if(existsFile && oldFileName !==``) {
+            fs.unlinkSync(pathFile)
+        }
+
         // delete medicine
         const saveMedicine = await prisma.medicine.delete({where: {id: Number(id)}})
 

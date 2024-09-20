@@ -10,7 +10,7 @@ router.post(`/`, [uploadMedicinePhoto.single(`photo`), createValidation], create
 // router for get all data
 router.get(`/`, readMedicine)
 // router for update
-router.put(`/:id`, [updateValidation], updateMedicine)
+router.put(`/:id`, [uploadMedicinePhoto.single(`photo`), updateValidation], updateMedicine)
 // router for delete
 router.delete(`/:id`, deleteMedicine)
 
