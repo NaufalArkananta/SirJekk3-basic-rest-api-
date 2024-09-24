@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt"
 
 const prisma = new PrismaClient({errorFormat: "minimal"});
 
@@ -9,11 +10,20 @@ const addAdmin = async (req: Request, res: Response) => {
         const email: string = req.body.email
         const password: string = req.body.password
 
+        const findEmail = await prisma.admin.findFirst({where: {email}})
+        if(findEmail){
+            return res.status(400).json({
+                message: `Email has exists`
+            })
+        }
+
+        const hashPassword = await bcrypt.hash(password, 12)
+
         const newAdmin = await prisma.admin.create({
             data: {
                 admin_name,
                 email,
-                password,
+                password: hashPassword,
             },
         })
         return res.status(200).json({
@@ -73,8 +83,8 @@ const updateAdmin = async(req: Request, res: Response) => {
             where: { id: Number(id) },
             data: {
                 admin_name: admin_name ?? findAdmin.admin_name,
-                email: email?? findAdmin.email,
-                password: password?? findAdmin.password,
+                email: email ?? findAdmin.email,
+                password: password ? await bcrypt.hash(password, 12) : findAdmin.password,
             },
         })
         if(!updatedAdmin) {
