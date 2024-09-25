@@ -33,4 +33,18 @@ const updateValidation = (req: Request, res: Response, next: NextFunction) => {
     next();
 }
 
-export { addValidation, updateValidation };
+const authSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(8).required(),
+})
+
+const authValidation = (req: Request, res: Response, next: NextFunction) => {
+    const validate = authSchema.validate(req.body, { abortEarly: false }); // To get all errors
+    if(validate.error) {
+        return res.status(400).json({
+            message: validate.error.details.map(it => it.message).join(", ")
+        })
+    }
+    next();
+}
+export { addValidation, updateValidation, authValidation };

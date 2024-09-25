@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { addAdmin, deleteAdmin, findAdmin, readAdmin, updateAdmin } from "../controller/adminController";
-import { addValidation, updateValidation } from "../middleware/adminValidation";
+import { addAdmin, authentication, deleteAdmin, findAdmin, readAdmin, updateAdmin } from "../controller/adminController";
+import { addValidation, authValidation, updateValidation } from "../middleware/adminValidation";
 
 const router = Router()
 
@@ -9,5 +9,6 @@ router.get(`/`, readAdmin)
 router.get(`/findAdmin`, findAdmin)
 router.put(`/:id`, [updateValidation], updateAdmin)
 router.delete(`/:id`, deleteAdmin)
+router.post(`/auth`, [authValidation], authentication)
 
 export default router

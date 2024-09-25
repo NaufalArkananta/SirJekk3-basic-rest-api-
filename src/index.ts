@@ -12,7 +12,7 @@ app.use(`/medicine`, MedicineRoute)
 
 app.use(`/admin`, AdminRoute)
 
-const PORT = 1992
+const PORT = process.env.PORT
 
 app.listen(PORT, () => {
     console.log(`Server DrugStore is running on port ${PORT}`)
