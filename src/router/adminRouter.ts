@@ -1,14 +1,15 @@
 import { Router } from "express";
 import { addAdmin, authentication, deleteAdmin, findAdmin, readAdmin, updateAdmin } from "../controller/adminController";
 import { addValidation, authValidation, updateValidation } from "../middleware/adminValidation";
+import { verifyToken } from "../middleware/authorization";
 
 const router = Router()
 
-router.post(`/`, [addValidation],  addAdmin)
-router.get(`/`, readAdmin)
-router.get(`/findAdmin`, findAdmin)
-router.put(`/:id`, [updateValidation], updateAdmin)
-router.delete(`/:id`, deleteAdmin)
+router.post(`/`, [verifyToken, addValidation],  addAdmin)
+router.get(`/`,[verifyToken], readAdmin)
+router.get(`/findAdmin`, [verifyToken], findAdmin)
+router.put(`/:id`, [verifyToken, updateValidation], updateAdmin)
+router.delete(`/:id`, [verifyToken], deleteAdmin)
 router.post(`/auth`, [authValidation], authentication)
 
 export default router
