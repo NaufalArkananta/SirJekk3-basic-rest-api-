@@ -29,7 +29,7 @@ const createValidation = (req: Request, res: Response, next: NextFunction) => {
         });
     }
     next();
-};
+}
 
 // update a rule/schema for adding new medicine
 const updateSchema = Joi.object({
