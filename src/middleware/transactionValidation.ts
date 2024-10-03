@@ -22,4 +22,20 @@ const createValidation = (req: Request, res: Response, next: NextFunction) => {
     next();
 }
 
-export { createValidation }
+const updateSchema = Joi.object({
+    chasier_name: Joi.string().optional(),
+    order_date: Joi.date().optional(),
+    transaction_detail: Joi.array().items(detailSchema).min(1).optional()
+})
+
+const updateValidation = (req: Request, res: Response, next: NextFunction) => {
+    const validate = updateSchema.validate(req.body, { abortEarly: false }); // To get all errors
+    if (validate.error) {
+        return res.status(400).json({
+            message: validate.error.details.map(it => it.message).join(", "), // Error messages separated by comma
+        });
+    }
+    next();
+}
+
+export { createValidation, updateValidation }

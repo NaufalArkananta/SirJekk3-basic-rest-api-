@@ -75,14 +75,25 @@ const createTransaction = async (req: Request, res: Response) => {
 
 const readTransaction = async (req: Request, res: Response) => {
     try {
+        // read and start date & end date for filtering data
+        const startDate = new Date(req.query.startDate?.toString() || ``)
+        const endDate = new Date(req.query.endDate?.toString() || ``)
+
+
         // mendapatkan seluruh data transaksi sekaligus detail di tiap transaksinya
         let allTransaction = await prisma.transaction.findMany({
                 include: {
                     transaction_detail: {
                         include: { medicine_detail: true }
                     }
-                }
+                },
+                orderBy: { order_date: "desc" }
             })
+            if(req.query.startDate && req.query.endDate) {
+                allTransaction = allTransaction.filter(trans => {
+                    return trans.order_date >= startDate && trans.order_date <= endDate
+                })
+            }
 
         // menentukan total harga di setiap transaksi
         allTransaction = allTransaction.map(trans => {
@@ -96,6 +107,7 @@ const readTransaction = async (req: Request, res: Response) => {
             message: `All Transaction has been retrieved`,
             data: allTransaction
         })
+
     } catch (error) {
         return res.status(500).json(error)
     }
@@ -128,10 +140,30 @@ const deleteTransaction = async (req: Request, res: Response) => {
 
 const updateTransaction = async (req: Request, res: Response) => {
     try {
+        // read id transaction from req.params
+        const { id } = req.params
+
+        // check that transaction exists based on "id"
+        const findTransaction = await prisma.transaction.findFirst({
+            where: { id: Number(id) },
+            include: { transaction_detail: true } 
+        })
+        
+        if(!findTransaction) {
+            return res.status(404).json({
+                message: `Transaction is not found`
+            })
+        }
+
         // read a requestt data
-        const chasier_name: string = req.body.chasier_name
-        const order_date: Date = new Date (req.body.order_date)
-        const transaction_detail: TransactionDetail[] = req.body.transaction_detail
+        const chasier_name: string = req.body.chasier_name || findTransaction.chasier_name
+        const order_date: Date = new Date (req.body.order_date || findTransaction.order_date)
+        const transaction_detail: TransactionDetail[] = req.body.transaction_detail || findTransaction.transaction_detail
+
+        // empty detail transaction based on transaction id
+        await prisma.transaction_detail.deleteMany({ 
+            where: { transaction_id: Number(id) } 
+        })
 
         // checking medicine (memastikan id obat tersedia)
         const arrayMedicineId = transaction_detail.map(item => item.medicine_id)
@@ -155,7 +187,8 @@ const updateTransaction = async (req: Request, res: Response) => {
         }
 
         // save transaction data
-        const newTransaction = await prisma.transaction.create({
+        const saveTransaction = await prisma.transaction.update({
+            where: {id: Number(id)},
             data: {
                 chasier_name,
                 order_date
@@ -169,7 +202,7 @@ const updateTransaction = async (req: Request, res: Response) => {
             const medicineItem = findMedicine.find(item => item.id == medicine_id)
             
             newDetail.push({
-                transaction_id: newTransaction.id,
+                transaction_id: saveTransaction.id,
                 medicine_id,
                 quantity,
                 order_price: medicineItem?.price || 0
@@ -182,7 +215,7 @@ const updateTransaction = async (req: Request, res: Response) => {
         })
 
         return res.status(200).json({
-            message: `New Transaction has been created`,
+            message: `Transaction has been updated`,
         })
 
     } catch (error) {
@@ -190,4 +223,4 @@ const updateTransaction = async (req: Request, res: Response) => {
     }
 }
 
-export { createTransaction, readTransaction, deleteTransaction }
+export { createTransaction, readTransaction, updateTransaction, deleteTransaction }
